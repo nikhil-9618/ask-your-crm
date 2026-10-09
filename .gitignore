@@ -1,0 +1,15 @@
+# secrets & local data — never commit
+.env
+.streamlit/secrets.toml
+crm.db
+
+# environments / caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# app-internal + editor noise
+.freebuff/
+.vscode/
+.idea/

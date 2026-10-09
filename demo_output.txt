@@ -1,0 +1,242 @@
+
+==============================================================================
+Q: Which leads haven't been contacted in the last 7 days?
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+Here are the leads that haven’t been contacted in the last 7 days:
+
+| ID | Name | Company | Last Contacted | Estimated Value | Owner |
+|----|------|---------|----------------|-----------------|-------|
+| **1** | **Vikram Rao** | TechNova | **2026‑09‑27** | **₹250,000** ≈ 2.5 lakh | Aarav Sharma |
+| **3** | **Arjun Verma** | CloudPeak | **2026‑09‑24** | **₹320,000** ≈ 3.2 lakh | Rohan Mehta |
+| **5** | **Karan Singh** | FinEdge | **2026‑09‑25** | **₹180,000** ≈ 1.8 lakh | Priya Nair |
+| **7** | **nikhil** | – | **Never contacted** | – | – |
+
+- All four leads are still marked **New** and need a follow‑up call or email.  
+- Lead 7 has no details yet, so it should be enriched before outreach.
+
+**Insight:** Prioritizing these overdue contacts can help convert them from “New” to qualified opportunities and boost the pipeline.
+
+Would you like to see the scheduled follow‑up tasks for these leads?
+
+SQL: SELECT leads.id,
+       leads.name,
+       leads.company,
+       leads.email,
+       leads.phone,
+       leads.source,
+       leads.status,
+       leads.created_at,
+       leads.last_contacted,
+       leads.estimated_value,
+       salespeople.name AS owner_name
+FROM leads
+LEFT JOIN salespeople ON leads.owner_id = salespeople.id
+WHERE leads.last_contacted IS NULL
+   OR leads.last_contacted < date('now','-7 days')
+rows: 4
+
+==============================================================================
+Q: Show me the opportunities currently stuck in the Proposal stage.
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+Here are the opportunities currently stuck in the **Proposal** stage:
+
+- **Apex Dashboard** – Customer: **Sameer Khan** – Owner: **Rohan Mehta** – Value: **₹420,000** (≈ 4.2 lakh) – Created: **2026‑10‑07** – Expected close: **2026‑11‑08**  
+- **Apex Analytics** – Customer: **Sameer Khan** – Owner: **Rohan Mehta** – Value: **₹640,000** (≈ 6.4 lakh) – Created: **2026‑10‑05** – Expected close: **2026‑11‑03**  
+- **Orion ERP Upgrade** – Customer: **Ravi Menon** – Owner: **Aarav Sharma** – Value: **₹1,200,000** (≈ 12.0 lakh) – Created: **2026‑10‑03** – Expected close: **2026‑10‑24**
+
+**Insight:** Three high‑value deals are awaiting proposal approval, indicating a strong pipeline but also a potential bottleneck that could delay revenue if not addressed promptly.
+
+*What’s the next step you’d like to take for these proposals?*
+
+SQL: SELECT o.id, o.name, c.name AS customer_name, o.stage, o.value, s.name AS owner_name, o.created_at, o.expected_close
+FROM opportunities o
+JOIN customers c ON o.customer_id = c.id
+JOIN salespeople s ON o.owner_id = s.id
+WHERE o.stage = 'Proposal'
+ORDER BY o.created_at DESC
+LIMIT 100
+rows: 3
+
+==============================================================================
+Q: Which salesperson has the highest conversion rate this month?
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+Aarav Sharma has the highest conversion rate this month.
+
+- **Salesperson:** **Aarav Sharma**  
+- **Total opportunities created:** **2**  
+- **Opportunities won:** **1**  
+- **Conversion rate:** **50.0 %** (this month)
+
+**Insight:** A 50 % conversion rate shows strong effectiveness for Aarav; the team could review his approach to replicate success across other reps.  
+
+Would you like to see the conversion rates for all salespeople this month?
+
+SQL: SELECT s.name AS salesperson,
+       COUNT(o.id) AS total_opportunities,
+       SUM(CASE WHEN o.stage = 'Closed Won' THEN 1 ELSE 0 END) AS won_opportunities,
+       ROUND(100.0 * SUM(CASE WHEN o.stage = 'Closed Won' THEN 1 ELSE 0 END) / NULLIF(COUNT(o.id), 0), 2) AS conversion_rate_percent
+FROM opportunities o
+JOIN salespeople s ON o.owner_id = s.id
+WHERE strftime('%Y-%m', o.created_at) = strftime('%Y-%m', 'now')
+GROUP BY s.id
+ORDER BY conversion_rate_percent DESC
+LIMIT 1
+rows: 1
+
+==============================================================================
+Q: What are my top 5 opportunities by value?
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+Here are your top 5 opportunities by value:
+
+| Opportunity | Customer | Owner | **Value** | Stage | Created | Expected Close |
+|-------------|----------|-------|-----------|-------|---------|----------------|
+| Nova Mobile App | **Divya Pillai** | **Priya Nair** | **₹1,500,000 ≈ 15.0 lakh** | Prospecting | 2026‑09‑19 | 2026‑11‑23 |
+| Orion ERP Upgrade | **Ravi Menon** | **Aarav Sharma** | **₹1,200,000 ≈ 12.0 lakh** | Proposal | 2026‑10‑03 | 2026‑10‑24 |
+| Nova CRM Rollout | **Divya Pillai** | **Priya Nair** | **₹850,000 ≈ 8.5 lakh** | Negotiation | 2026‑09‑29 | 2026‑10‑19 |
+| Apex Analytics | **Sameer Khan** | **Rohan Mehta** | **₹640,000 ≈ 6.4 lakh** | Proposal | 2026‑10‑05 | 2026‑11‑03 |
+| Orion AI Add‑on | **Ravi Menon** | **Aarav Sharma** | **₹500,000 ≈ 5.0 lakh** | Closed Lost | 2026‑08‑25 | 2026‑09‑19 |
+
+- The two highest‑value deals (**Nova Mobile App** and **Orion ERP Upgrade**) are still in early stages, offering strong upside if they progress.
+- Both **Divya Pillai** and **Ravi Menon** appear repeatedly, indicating they’re key accounts to nurture.
+
+**Insight:** Prioritizing follow‑ups on the top three prospects could convert high‑value pipeline into revenue before the quarter ends.
+
+Would you like to see the pipeline distribution by sales stage?
+
+SQL: SELECT o.id,
+       o.name AS opportunity,
+       c.name AS customer,
+       s.name AS owner,
+       o.value,
+       o.stage,
+       o.created_at,
+       o.expected_close
+FROM opportunities o
+JOIN customers c ON o.customer_id = c.id
+JOIN salespeople s ON o.owner_id = s.id
+ORDER BY o.value DESC
+LIMIT 5
+rows: 5
+
+==============================================================================
+Q: Which customers have pending follow-ups?
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+The following customers have pending follow‑ups:
+
+- **Ravi Menon** (Orion Systems) – Owner: **Aarav Sharma** – Due: **2026‑10‑11** – “Send revised proposal”
+- **Divya Pillai** (Nova Retail) – Owner: **Priya Nair** – Due: **2026‑10‑14** – “Schedule contract call”
+- **Sameer Khan** (Apex Logistics) – Owner: **Rohan Mehta** – Due: **2026‑10‑08** – “Quarterly check-in”
+
+**Insight:** These pending follow‑ups are due this week, so the sales team should prioritize contacting these customers to keep deals progressing.
+
+Would you like to see the upcoming follow‑ups that are already marked as completed?
+
+SQL: SELECT DISTINCT c.id, c.name, c.company, sp.name AS owner, f.due_date, f.description
+FROM followups f
+JOIN customers c ON f.customer_id = c.id
+JOIN salespeople sp ON f.owner_id = sp.id
+WHERE f.status = 'Pending'
+rows: 3
+
+==============================================================================
+Q: How many leads do I have?
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+You have **7** leads.
+
+- Total leads in the system: **7**  
+
+**Insight:** A count of 7 leads indicates a modest pipeline—focus on qualifying and nurturing these prospects to boost upcoming sales.
+
+Would you like to see a breakdown of these leads by source or status?
+
+SQL: SELECT COUNT(*) AS lead_count FROM leads
+rows: 1
+
+==============================================================================
+Q: What's my average deal size?
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+Your average deal size is **₹300,000** (≈ **3.0 lakh**).
+
+- Calculated from all opportunities with **stage = “Closed Won.”**  
+- Rounded to two decimal places.  
+- Represents the mean value of successful deals.
+
+**Insight:** A ₹300 k average indicates each won deal contributes significant revenue; targeting higher‑value prospects could further lift overall sales performance.
+
+*Would you like to see the average deal size broken down by sales rep or region?*
+
+SQL: SELECT ROUND(AVG(value), 2) AS average_deal_size FROM opportunities WHERE stage = 'Closed Won'
+rows: 1
+
+==============================================================================
+Q: Total pipeline value in Negotiation stage.
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+The total pipeline value in the Negotiation stage is **₹850,000** (≈ **8.5 lakh**).
+
+- **Stage:** Negotiation  
+- **Total value:** **₹850,000** (≈ **8.5 lakh**)  
+
+**Insight:** A strong ₹850 k sits in Negotiation, so prioritizing these deals could significantly boost closed‑won revenue.  
+
+Would you like to see the individual opportunities contributing to this total?
+
+SQL: SELECT SUM(value) AS total_negotiation_value
+FROM opportunities
+WHERE stage = 'Negotiation'
+rows: 1
+
+==============================================================================
+Q: Who owns the Nova Retail account?
+------------------------------------------------------------------------------
+tool=text-to-sql  intent=read
+
+Priya Nair (priya@bharathcloud.com) owns the Nova Retail account.
+
+- **Owner Name:** Priya Nair  
+- **Owner Email:** priya@bharathcloud.com  
+
+**Insight:** The sales team should route any Nova Retail communications through Priya to ensure consistent relationship management.  
+
+*Would you like to see Priya’s recent interactions with Nova Retail?*
+
+SQL: SELECT sp.name AS owner_name, sp.email AS owner_email
+FROM customers c
+JOIN salespeople sp ON c.owner_id = sp.id
+WHERE c.company = 'Nova Retail'
+rows: 1
+
+==============================================================================
+Q: hello
+------------------------------------------------------------------------------
+tool=greeting  intent=chat
+
+👋 **Hello! I'm your CRM AI Assistant.**
+
+Ask me anything about your leads, opportunities, customers, salespeople, follow-ups, or pipeline — in plain English.
+
+I can also **take actions** like creating follow-up tasks.
+
+==============================================================================
+Q: What is the capital of France?
+------------------------------------------------------------------------------
+tool=assistant  intent=general
+
+The capital of France is **Paris**.  
+
+If you’d like any sales‑related data from your CRM, just let me know!
