@@ -352,7 +352,11 @@ For security issues, avoid publishing credentials, customer data, or exploitable
 
 ## 📄 License
 
-No license is specified here. Add a `LICENSE` file to clarify the terms under which others may use, modify, and distribute this project.
+This project is licensed under the **MIT License**.
+
+You are free to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of this software, subject to the terms of the license.
+
+See the [`LICENSE`](LICENSE) file for the full license text.
 
 ---
 
